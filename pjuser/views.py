@@ -3,7 +3,10 @@ from django.views import View
 from .models import PjUser
 from django.contrib.auth import authenticate, login
 import json
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 
+@method_decorator(csrf_exempt, name='dispatch')
 class RegisterView(View):
     def post(self, request):
         try:
@@ -32,12 +35,15 @@ class RegisterView(View):
             user.set_password(password)
             user.save()
 
-            return JsonResponse({'message': '注册成功！'})
+            response = JsonResponse({'message': '注册成功！'})
+            response["Access-Control-Allow-Origin"] = "*"
+            return response
 
         except json.JSONDecodeError:
             return JsonResponse({'error': '请求体不是有效的JSON！'}, status=400)
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class LoginView(View):
     def post(self, request):
         data = json.loads(request.body)
@@ -47,6 +53,9 @@ class LoginView(View):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            return JsonResponse({'message': '登录成功！'}, status=200)
+            response = JsonResponse({'message': '登录成功！'}, status=200)
+            response["Access-Control-Allow-Origin"] = "*"
+            return response
         else:
             return JsonResponse({'error': '用户名或密码错误！'}, status=400)
+
